@@ -46,6 +46,7 @@
     <Compile Include="Commands\Cd.cs" />
     <Compile Include="Commands\Dir.cs" />
     <Compile Include="Commands\Exit.cs" />
+    <Compile Include="Commands\Git.cs" />
     <Compile Include="Commands\Help.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

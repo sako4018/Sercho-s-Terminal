@@ -46,6 +46,10 @@ namespace Sercho_s_Terminal
                 }
                 else if (command.StartsWith("cd "))
                 {
+                    if (command == "")
+                    {
+
+                    }
                     Cd cd = new Cd();
                     cd.Execute(command);
                 }
@@ -71,6 +75,11 @@ namespace Sercho_s_Terminal
                 else if (command == "time")
                 {
                     Console.WriteLine(DateTime.Now.ToString("HH:mm:ss"));
+                }
+                else if (command.StartsWith("git "))
+                {
+                    Git git = new Git();
+                    git.Execute(command);
                 }
                 else
                 {
