@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
 
 namespace Sercho_s_Terminal.Commands
@@ -11,17 +7,41 @@ namespace Sercho_s_Terminal.Commands
     {
         public void Execute(string command)
         {
-            string arguments = command.Substring(3).Trim();
-            Process process = new Process();
-            process.StartInfo.FileName = "git";
-            process.StartInfo.Arguments = arguments;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.CreateNoWindow = true;
-            process.Start();
-            string output = process.StandardOutput.ReadToEnd();
+            string arguments = "";
 
-            Console.WriteLine(output);
+            if (command.Length > 3)
+            {
+                arguments = command.Substring(4);
+            }
+
+            ProcessStartInfo info = new ProcessStartInfo();
+
+            info.FileName = "git";
+            info.Arguments = arguments;
+            info.UseShellExecute = false;
+            info.RedirectStandardOutput = true;
+            info.RedirectStandardError = true;
+            info.CreateNoWindow = true;
+
+            Process process = new Process();
+            process.StartInfo = info;
+
+            process.Start();
+
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+
+            process.WaitForExit();
+
+            if (!string.IsNullOrEmpty(output))
+            {
+                Console.WriteLine(output);
+            }
+
+            if (!string.IsNullOrEmpty(error))
+            {
+                Console.WriteLine(error);
+            }
         }
     }
 }

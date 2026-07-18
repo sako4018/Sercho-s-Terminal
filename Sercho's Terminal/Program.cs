@@ -76,7 +76,7 @@ namespace Sercho_s_Terminal
                 {
                     Console.WriteLine(DateTime.Now.ToString("HH:mm:ss"));
                 }
-                else if (command.StartsWith("git "))
+                else if (command == "git" || command.StartsWith("git "))
                 {
                     Git git = new Git();
                     git.Execute(command);
