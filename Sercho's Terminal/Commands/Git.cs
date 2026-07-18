@@ -3,44 +3,42 @@ using System.Diagnostics;
 
 namespace Sercho_s_Terminal.Commands
 {
-    internal class Git
+    internal class Git : ICommand
     {
-        public void Execute(string command)
+        public string Name => "git";
+        public string Description => "Proxy to system git. Usage: git [args]";
+
+        public void Execute(string[] args)
         {
-            string arguments = "";
+            var arguments = string.Join(" ", args ?? new string[0]);
 
-            if (command.Length > 3)
+            var info = new ProcessStartInfo
             {
-                arguments = command.Substring(4);
+                FileName = "git",
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WorkingDirectory = Environment.CurrentDirectory
+            };
+
+            try
+            {
+                using (var p = new Process { StartInfo = info })
+                {
+                    p.OutputDataReceived += (s, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
+                    p.ErrorDataReceived += (s, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
+
+                    p.Start();
+                    p.BeginOutputReadLine();
+                    p.BeginErrorReadLine();
+                    p.WaitForExit();
+                }
             }
-
-            ProcessStartInfo info = new ProcessStartInfo();
-
-            info.FileName = "git";
-            info.Arguments = arguments;
-            info.UseShellExecute = false;
-            info.RedirectStandardOutput = true;
-            info.RedirectStandardError = true;
-            info.CreateNoWindow = true;
-
-            Process process = new Process();
-            process.StartInfo = info;
-
-            process.Start();
-
-            string output = process.StandardOutput.ReadToEnd();
-            string error = process.StandardError.ReadToEnd();
-
-            process.WaitForExit();
-
-            if (!string.IsNullOrEmpty(output))
+            catch (Exception ex)
             {
-                Console.WriteLine(output);
-            }
-
-            if (!string.IsNullOrEmpty(error))
-            {
-                Console.WriteLine(error);
+                Console.WriteLine($"Failed to run git: {ex.Message}");
             }
         }
     }

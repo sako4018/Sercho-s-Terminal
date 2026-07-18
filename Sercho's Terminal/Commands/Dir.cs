@@ -3,21 +3,27 @@ using System.IO;
 
 namespace Sercho_s_Terminal.Commands
 {
-    internal class Dir
+    internal class Dir : ICommand
     {
-        public void Execute()
+        public string Name => "dir";
+        public string Description => "List files and folders in the current directory";
+
+        public void Execute(string[] args)
         {
-            string[] folders = Directory.GetDirectories(Environment.CurrentDirectory);
-            string[] files = Directory.GetFiles(Environment.CurrentDirectory);
-
-            foreach (string folder in folders)
+            try
             {
-                Console.WriteLine("[DIR] " + Path.GetFileName(folder));
+                var dirs = Directory.GetDirectories(Environment.CurrentDirectory);
+                var files = Directory.GetFiles(Environment.CurrentDirectory);
+
+                foreach (var d in dirs)
+                    Console.WriteLine("[DIR]  " + Path.GetFileName(d));
+
+                foreach (var f in files)
+                    Console.WriteLine("       " + Path.GetFileName(f));
             }
-
-            foreach (string file in files)
+            catch (Exception ex)
             {
-                Console.WriteLine(Path.GetFileName(file));
+                Console.WriteLine($"Error listing directory: {ex.Message}");
             }
         }
     }

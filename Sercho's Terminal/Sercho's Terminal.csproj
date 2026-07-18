@@ -44,10 +44,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\Cd.cs" />
+    <Compile Include="Commands\CommandRegistry.cs" />
     <Compile Include="Commands\Dir.cs" />
     <Compile Include="Commands\Exit.cs" />
     <Compile Include="Commands\Git.cs" />
     <Compile Include="Commands\Help.cs" />
+    <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

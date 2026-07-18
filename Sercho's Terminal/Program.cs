@@ -1,10 +1,10 @@
 ﻿using Sercho_s_Terminal.Commands;
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Sercho_s_Terminal
 {
@@ -12,80 +12,110 @@ namespace Sercho_s_Terminal
     {
         static void Main(string[] args)
         {
-            /*  Console.WriteLine("'date' - Show current (day,month,year)");
-                    Console.WriteLine("'time' - Show current (hours,minutes,seconds)");
-                    //Console.WriteLine("'dir' - Lists files and folders");
-                    Console.WriteLine("'mkdir' - Creates a folder");
-                    Console.WriteLine("'cd' - Changes directory");
-                    Console.WriteLine("'clear' -  Clears the screen");
-                    Console.WriteLine("'exit' - Exits terminal");
-            */
-
+            // Register commands
+            CommandRegistry.Register(new Help());
+            CommandRegistry.Register(new Cd());
+            CommandRegistry.Register(new Dir());
+            CommandRegistry.Register(new Git());
+            // Register additional ICommand implementations if present:
+            // CommandRegistry.Register(new Mkdir());
+            // CommandRegistry.Register(new DateCmd());
+            // CommandRegistry.Register(new TimeCmd());
+            // CommandRegistry.Register(new Clear());
+            // CommandRegistry.Register(new Exit());
 
             Console.WriteLine("=============================");
             Console.WriteLine("   Sercho's Terminal v1.0");
             Console.WriteLine("=============================\n");
-
             Console.WriteLine("--- for all commands type 'help' ---");
-            string currentDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            Directory.SetCurrentDirectory(currentDirectory);
+
+            Directory.SetCurrentDirectory(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+
             while (true)
             {
                 Console.Write($"\n{Environment.CurrentDirectory}> ");
-                string command = Console.ReadLine();
-                if (command == "help")
-                {
-                    Help help = new Help();
-                    help.Execute();
+                var line = Console.ReadLine() ?? string.Empty;
+                var parts = ParseArguments(line).ToArray();
+                if (parts.Length == 0) continue;
 
-                }
-                else if (command == "dir")
+                var cmdName = parts[0];
+                var cmdArgs = parts.Skip(1).ToArray();
+
+                if (CommandRegistry.TryGet(cmdName, out var cmd))
                 {
-                    Dir dir = new Dir();
-                    dir.Execute();
+                    cmd.Execute(cmdArgs);
+                    if (string.Equals(cmdName, "exit", StringComparison.OrdinalIgnoreCase))
+                        break;
+                    continue;
                 }
-                else if (command.StartsWith("cd "))
+
+                // Not a built-in command: try launching external executable
+                try
                 {
-                    if (command == "")
+                    var psi = new ProcessStartInfo
                     {
+                        FileName = cmdName,
+                        Arguments = string.Join(" ", cmdArgs),
+                        WorkingDirectory = Environment.CurrentDirectory,
+                        UseShellExecute = false
+                    };
+                    Process.Start(psi)?.Dispose();
+                }
+                catch
+                {
+                    Console.WriteLine($"'{cmdName}' is not recognized as a command.");
+                }
+            }
+        }
 
+        // Tokenizer: supports quoted args ("..." and '...')
+        private static IEnumerable<string> ParseArguments(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) yield break;
+
+            var sb = new StringBuilder();
+            bool inQuote = false;
+            char quoteChar = '\0';
+
+            for (int i = 0; i < input.Length; i++)
+            {
+                var c = input[i];
+                if (inQuote)
+                {
+                    if (c == quoteChar)
+                    {
+                        inQuote = false;
+                        yield return sb.ToString();
+                        sb.Clear();
                     }
-                    Cd cd = new Cd();
-                    cd.Execute(command);
-                }
-                else if (command == "exit")
-                {
-                    Exit exit = new Exit();
-                    exit.Execute();
-                    break;
-                }
-                else if (command == "clear")
-                {
-                    Console.Clear();
-                }
-                else if (command.StartsWith("mkdir "))
-                {
-                    string folderName = command.Substring(6).Trim();
-                    Directory.CreateDirectory(folderName);
-                }
-                else if (command == "date")
-                {
-                    Console.WriteLine(DateTime.Now.ToString("dd/MM/yyyy"));
-                }
-                else if (command == "time")
-                {
-                    Console.WriteLine(DateTime.Now.ToString("HH:mm:ss"));
-                }
-                else if (command == "git" || command.StartsWith("git "))
-                {
-                    Git git = new Git();
-                    git.Execute(command);
+                    else
+                    {
+                        sb.Append(c);
+                    }
                 }
                 else
                 {
-                    Console.WriteLine($"'{command}' is not recognized as a command.");
+                    if (char.IsWhiteSpace(c))
+                    {
+                        if (sb.Length > 0)
+                        {
+                            yield return sb.ToString();
+                            sb.Clear();
+                        }
+                    }
+                    else if (c == '"' || c == '\'')
+                    {
+                        inQuote = true;
+                        quoteChar = c;
+                    }
+                    else
+                    {
+                        sb.Append(c);
+                    }
                 }
             }
+
+            if (sb.Length > 0) yield return sb.ToString();
         }
     }
 }
